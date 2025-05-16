@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 export default function Index() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>FlowLyfe!</Text>
+      <Text style={styles.text}>Home Page</Text>
     </View>
   );
 }
@@ -17,5 +17,10 @@ const styles = StyleSheet.create({
   },
   text: {
     color: '#fff',
+  },
+  button: {
+    fontSize: 20,
+    textDecorationLine: "underline",
+    color: '#fff'
   },
 });
