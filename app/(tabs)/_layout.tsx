@@ -5,7 +5,15 @@ export default function TabsLayout() {
   return ( 
   <Tabs
   screenOptions={{
-    tabBarActiveTintColor: "black",
+    tabBarActiveTintColor: "#fff",
+    headerStyle: {
+        backgroundColor: "#25292e",
+    },
+    headerShadowVisible: false,
+    headerTintColor: "#fff",
+    tabBarStyle: {
+        backgroundColor: "#25292e"
+    },
   }}
   >
     <Tabs.Screen 
@@ -16,6 +24,7 @@ export default function TabsLayout() {
             <Ionicons 
                 name={focused ? "home-sharp" : "home-outline" } 
                 size={30}
+                color={color}
             />,
       }}
     />
@@ -25,8 +34,9 @@ export default function TabsLayout() {
           headerTitle:"About Flowlyfe",
           tabBarIcon: ({focused, color}) => 
           <Ionicons
-                name={focused ? "help-sharp" : "help-outline" } 
+                name={focused ? "information-circle" : "information-circle-outline" } 
                 size={30}
+                color={color}
           />,
         }}
     />
