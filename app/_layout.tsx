@@ -1,8 +1,6 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
-// LogBox.ignoreAllLogs(true);
-
 export default function RootLayout() {
   return ( 
     <>
@@ -13,6 +11,9 @@ export default function RootLayout() {
           options={{
             headerShown: false,
           }}
+        />
+        <Stack.Screen
+          name ="todo"
         />
         <Stack.Screen 
             name ="+not-found"

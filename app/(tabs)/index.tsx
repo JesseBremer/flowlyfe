@@ -1,9 +1,15 @@
-import { StyleSheet, Text, View } from "react-native";
+import Button from '@/components/Button';
+import { StyleSheet, View } from "react-native";
 
 export default function Index() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Home Page</Text>
+      <View style={styles.buttonContainer}>
+        <Button label="Calender"  destination="/calender" />
+        <Button label="To Do List" destination="/todo" />
+        <Button label="Grocery List" destination="/groceries" />
+        <Button label="Expense Tracker" destination="/expenses" />
+      </View>
     </View>
   );
 }
@@ -18,9 +24,8 @@ const styles = StyleSheet.create({
   text: {
     color: '#fff',
   },
-  button: {
-    fontSize: 20,
-    textDecorationLine: "underline",
-    color: '#fff'
+  buttonContainer: {
+    flex: 1,
+    alignItems: 'center',
   },
 });
