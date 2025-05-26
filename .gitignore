@@ -1,0 +1,55 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+app-example
+components/Collapsible.tsx
+components/ExternalLink.tsx
+components/HapticTab.tsx
+components/HelloWave.tsx
+components/ParallaxScrollView.tsx
+components/ThemedText.tsx
+components/ThemedView.tsx
+components/ui/IconSymbol.ios.tsx
+components/ui/IconSymbol.tsx
+components/ui/TabBarBackground.ios.tsx
+components/ui/TabBarBackground.tsx
+constants/Colors.ts
+hooks/useColorScheme.ts
+hooks/useColorScheme.web.ts
+hooks/useThemeColor.ts
+scripts/reset-project.js
