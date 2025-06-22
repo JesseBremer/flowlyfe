@@ -1,13 +1,17 @@
+import { Href, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type Props = {
   label: string;
+  destination: Href;
 };
 
-export default function Button({ label }: Props) {
+export default function Button({ label, destination }: Props) {
+    const router = useRouter();
+
   return (
     <View style={styles.buttonContainer}>
-      <Pressable style={styles.button} onPress={() => alert('You pressed a button.')}>
+      <Pressable style={styles.button} onPress={() => router.push(destination)}>
         <Text style={styles.buttonLabel}>{label}</Text>
       </Pressable>
     </View>
