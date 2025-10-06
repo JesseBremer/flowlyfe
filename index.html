@@ -36,14 +36,103 @@
         </main>
 
         <main id="inboxPage" class="page">
-            <div class="inbox-header">
-                <button id="backBtn" class="back-btn">← Back</button>
+            <div class="page-header">
+                <button class="nav-btn back-btn" data-page="capture">← Back</button>
                 <h2>Inbox</h2>
             </div>
             <div id="inboxList" class="inbox-list">
                 <!-- Items will be added here -->
             </div>
         </main>
+
+        <main id="thoughtsPage" class="page">
+            <div class="page-header">
+                <button class="nav-btn back-btn" data-page="capture">← Back</button>
+                <h2>Thoughts & Ideas</h2>
+            </div>
+            <div id="thoughtsList" class="category-list">
+                <!-- Items will be added here -->
+            </div>
+        </main>
+
+        <main id="todosPage" class="page">
+            <div class="page-header">
+                <button class="nav-btn back-btn" data-page="capture">← Back</button>
+                <h2>To-Do Lists</h2>
+            </div>
+
+            <div class="todos-container">
+                <section class="todo-section">
+                    <h3>Active</h3>
+                    <div id="activeTodosList" class="todo-list">
+                        <!-- Active todos will be added here -->
+                    </div>
+                </section>
+
+                <section class="todo-section">
+                    <h3>Someday/Maybe</h3>
+                    <div id="somedayTodosList" class="todo-list">
+                        <!-- Someday todos will be added here -->
+                    </div>
+                </section>
+
+                <section class="todo-section">
+                    <h3>Awaiting</h3>
+                    <div id="awaitingTodosList" class="todo-list">
+                        <!-- Awaiting todos will be added here -->
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Process Modal -->
+        <div id="processModal" class="modal">
+            <div class="modal-content">
+                <h3>Process Item</h3>
+                <div id="processContent" class="process-content"></div>
+
+                <div class="process-buttons">
+                    <button onclick="processTo('thoughts')" class="process-option thoughts-btn">
+                        💭 Thought/Idea
+                    </button>
+
+                    <div class="todo-options">
+                        <p class="option-label">To-Do:</p>
+                        <button onclick="processTo('todos', 'active')" class="process-option todo-btn">
+                            ✓ Active
+                        </button>
+                        <button onclick="processTo('todos', 'someday')" class="process-option todo-btn">
+                            ⏳ Someday
+                        </button>
+                        <button onclick="processTo('todos', 'awaiting')" class="process-option todo-btn">
+                            ⏱️ Awaiting
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="closeProcessModal()" class="modal-close">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-btn" data-page="capture">
+                <span class="nav-icon">✏️</span>
+                <span class="nav-label">Capture</span>
+            </button>
+            <button class="nav-btn" data-page="inbox">
+                <span class="nav-icon">📥</span>
+                <span class="nav-label">Inbox</span>
+            </button>
+            <button class="nav-btn" data-page="thoughts">
+                <span class="nav-icon">💭</span>
+                <span class="nav-label">Thoughts</span>
+            </button>
+            <button class="nav-btn" data-page="todos">
+                <span class="nav-icon">✓</span>
+                <span class="nav-label">To-Dos</span>
+            </button>
+        </nav>
     </div>
 
     <script src="app.js"></script>
