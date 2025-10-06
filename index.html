@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Flowlyfe - Capture thoughts instantly, process them later">
+    <meta name="theme-color" content="#4A90E2">
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+    <title>Flowlyfe</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Flowlyfe</h1>
+            <button id="viewInboxBtn" class="header-btn">
+                Inbox <span id="inboxCount" class="count-badge">0</span>
+            </button>
+        </header>
+
+        <main id="capturePage" class="page active">
+            <div class="capture-container">
+                <textarea
+                    id="captureInput"
+                    placeholder="What's on your mind?"
+                    autofocus
+                    rows="1"></textarea>
+                <button id="captureBtn" class="capture-btn">Capture</button>
+            </div>
+            <div id="captureStatus" class="status-message"></div>
+        </main>
+
+        <main id="inboxPage" class="page">
+            <div class="inbox-header">
+                <button id="backBtn" class="back-btn">← Back</button>
+                <h2>Inbox</h2>
+            </div>
+            <div id="inboxList" class="inbox-list">
+                <!-- Items will be added here -->
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Register service worker for PWA functionality
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(reg => console.log('Service Worker registered', reg))
+                .catch(err => console.log('Service Worker registration failed', err));
+        }
+    </script>
+</body>
+</html>
