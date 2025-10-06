@@ -392,24 +392,109 @@ main {
 
 .todo-item {
     background-color: var(--card-bg);
-    padding: 0.75rem;
+    padding: 0.75rem 1rem;
     border-radius: 12px;
     box-shadow: 0 2px 8px var(--shadow-subtle);
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 0.75rem;
     border-left: 3px solid var(--accent-sand);
     transition: all 0.3s ease;
+    margin-bottom: 0.5rem;
 }
 
 .todo-item:hover {
     box-shadow: 0 4px 12px var(--shadow-medium);
-    transform: translateX(2px);
+    transform: translateX(4px);
+    border-left-color: var(--accent-water);
 }
 
-.todo-item.completed .todo-text {
+.todo-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.todo-title {
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.todo-has-notes {
+    font-size: 0.85rem;
+    opacity: 0.6;
+}
+
+.todo-content.completed .todo-title {
     text-decoration: line-through;
     opacity: 0.6;
+}
+
+.todo-edit-form {
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.todo-edit-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    font-family: inherit;
+    border: 2px solid var(--accent-sand);
+    border-radius: 8px;
+    resize: vertical;
+    transition: all 0.3s ease;
+    line-height: 1.5;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+.todo-edit-textarea:focus {
+    outline: none;
+    border-color: var(--accent-water);
+    box-shadow: 0 2px 8px var(--shadow-medium);
+}
+
+.todo-edit-input {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    font-family: inherit;
+    border: 2px solid var(--accent-sand);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+.todo-edit-input:focus {
+    outline: none;
+    border-color: var(--accent-water);
+    box-shadow: 0 2px 8px var(--shadow-medium);
+}
+
+.todo-detail-meta {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.todo-detail-meta p {
+    margin-bottom: 0.25rem;
 }
 
 .todo-checkbox {
@@ -429,14 +514,6 @@ main {
     margin-bottom: 0.25rem;
 }
 
-.todo-meta {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-}
-
-.todo-time {
-    font-style: italic;
-}
 
 /* Process Modal */
 .modal {

@@ -558,22 +558,28 @@ function renderTodoList(listName, elementId) {
         return;
     }
 
-    list.innerHTML = todos.map(item => `
-        <div class="todo-item ${item.completed ? 'completed' : ''}" data-id="${item.id}">
-            <input
-                type="checkbox"
-                ${item.completed ? 'checked' : ''}
-                onchange="toggleTodo('${listName}', ${item.id})"
-                class="todo-checkbox">
-            <div class="todo-content">
-                <div class="todo-text">${escapeHtml(item.content)}</div>
-                <div class="todo-meta">
-                    <span class="todo-time">${formatTimestamp(item.timestamp)}</span>
-                </div>
+    list.innerHTML = todos.map(item => {
+        // Extract title (first line) and check if there are notes
+        const lines = item.content.split('\n');
+        const title = lines[0];
+        const hasNotes = lines.length > 1 || item.dueDate;
+
+        return `
+        <div class="todo-item" data-id="${item.id}">
+            ${listName !== 'awaiting' ? `
+                <input
+                    type="checkbox"
+                    ${item.completed ? 'checked' : ''}
+                    onchange="toggleTodo('${listName}', ${item.id})"
+                    class="todo-checkbox">
+            ` : ''}
+            <div class="todo-content ${item.completed && listName !== 'awaiting' ? 'completed' : ''}" onclick="openTodoDetail('${listName}', ${item.id})">
+                <div class="todo-title">${escapeHtml(title)}</div>
+                ${hasNotes ? '<span class="todo-has-notes">📝</span>' : ''}
             </div>
-            <button class="delete-btn" onclick="deleteTodo('${listName}', ${item.id})">Delete</button>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // Toggle todo completion
@@ -584,6 +590,241 @@ function toggleTodo(listName, id) {
         saveData();
         renderTodoList(listName, `${listName}TodosList`);
     }
+}
+
+// Open move modal for todos
+function openMoveModal(fromList, id) {
+    const todo = state.categories.todos[fromList].find(t => t.id === id);
+    if (!todo) return;
+
+    state.movingTodo = { fromList, id };
+
+    const modal = document.getElementById('moveModal');
+    modal.style.display = 'flex';
+}
+
+// Close move modal
+function closeMoveModal() {
+    const modal = document.getElementById('moveModal');
+    modal.style.display = 'none';
+    state.movingTodo = null;
+}
+
+// Move todo to selected list
+function moveToList(toList) {
+    if (!state.movingTodo) return;
+
+    const { fromList, id } = state.movingTodo;
+
+    // Don't move if same list
+    if (fromList === toList) {
+        closeMoveModal();
+        return;
+    }
+
+    const todo = state.categories.todos[fromList].find(t => t.id === id);
+    if (!todo) return;
+
+    const notes = prompt('Add notes about this move (optional):', '');
+
+    // User cancelled
+    if (notes === null) {
+        closeMoveModal();
+        return;
+    }
+
+    // Remove from current list
+    state.categories.todos[fromList] = state.categories.todos[fromList].filter(t => t.id !== id);
+
+    // Update content with notes if provided
+    if (notes.trim()) {
+        const listLabels = {
+            active: 'Active',
+            someday: 'Someday',
+            awaiting: 'Awaiting'
+        };
+        todo.content = `${todo.content}\n\n→ ${listLabels[toList]}: ${notes.trim()}`;
+    }
+
+    // Add to new list
+    state.categories.todos[toList].unshift(todo);
+
+    saveData();
+    renderTodos();
+    closeMoveModal();
+}
+
+// Open todo detail modal
+function openTodoDetail(listName, id) {
+    const todo = state.categories.todos[listName].find(t => t.id === id);
+    if (!todo) return;
+
+    state.viewingTodo = { listName, id };
+
+    const modal = document.getElementById('todoDetailModal');
+    const contentInput = document.getElementById('todoEditContent');
+    const dueDateInput = document.getElementById('todoEditDueDate');
+    const dueTimeInput = document.getElementById('todoEditDueTime');
+    const timestamp = document.getElementById('todoDetailTimestamp');
+
+    contentInput.value = todo.content;
+
+    // Parse existing dueDate if it exists
+    if (todo.dueDateTime) {
+        dueDateInput.value = todo.dueDateTime.date || '';
+        dueTimeInput.value = todo.dueDateTime.time || '';
+    } else {
+        dueDateInput.value = '';
+        dueTimeInput.value = '';
+    }
+
+    timestamp.textContent = `Created: ${formatTimestamp(todo.timestamp)}`;
+
+    modal.style.display = 'flex';
+}
+
+// Close todo detail modal
+function closeTodoDetail() {
+    const modal = document.getElementById('todoDetailModal');
+    modal.style.display = 'none';
+    state.viewingTodo = null;
+}
+
+// Save todo changes from detail view
+function saveTodoFromDetail() {
+    if (!state.viewingTodo) return;
+
+    const { listName, id } = state.viewingTodo;
+    const todo = state.categories.todos[listName].find(t => t.id === id);
+    if (!todo) return;
+
+    const contentInput = document.getElementById('todoEditContent');
+    const dueDateInput = document.getElementById('todoEditDueDate');
+    const dueTimeInput = document.getElementById('todoEditDueTime');
+
+    const newContent = contentInput.value.trim();
+    if (!newContent) {
+        alert('Task content cannot be empty');
+        return;
+    }
+
+    todo.content = newContent;
+
+    // Store date and time separately
+    const date = dueDateInput.value.trim();
+    const time = dueTimeInput.value.trim();
+
+    if (date || time) {
+        todo.dueDateTime = {
+            date: date || null,
+            time: time || null
+        };
+        // Create display string for backward compatibility
+        todo.dueDate = formatDueDateTime(date, time);
+    } else {
+        todo.dueDateTime = null;
+        todo.dueDate = null;
+    }
+
+    saveData();
+    renderTodos();
+    closeTodoDetail();
+}
+
+// Format due date/time for display
+function formatDueDateTime(date, time) {
+    if (!date && !time) return null;
+
+    let formatted = '';
+
+    if (date) {
+        // Convert YYYY-MM-DD to readable format
+        const dateObj = new Date(date + 'T00:00:00');
+        const options = { month: 'short', day: 'numeric', year: 'numeric' };
+        formatted = dateObj.toLocaleDateString('en-US', options);
+    }
+
+    if (time) {
+        // Convert 24h time to 12h format
+        const [hours, minutes] = time.split(':');
+        const hour = parseInt(hours);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        formatted += (formatted ? ' at ' : '') + `${hour12}:${minutes} ${ampm}`;
+    }
+
+    return formatted;
+}
+
+// Move todo from detail view
+function moveTodoFromDetail() {
+    if (!state.viewingTodo) return;
+    const { listName, id } = state.viewingTodo;
+    closeTodoDetail();
+    openMoveModal(listName, id);
+}
+
+// Delete todo from detail view
+function deleteTodoFromDetail() {
+    if (!state.viewingTodo) return;
+    const { listName, id } = state.viewingTodo;
+
+    if (confirm('Delete this todo?')) {
+        state.categories.todos[listName] = state.categories.todos[listName].filter(t => t.id !== id);
+        saveData();
+        renderTodos();
+        closeTodoDetail();
+    }
+}
+
+// Export todo to calendar
+function exportTodoToCalendar() {
+    if (!state.viewingTodo) return;
+
+    const { listName, id } = state.viewingTodo;
+    const todo = state.categories.todos[listName].find(t => t.id === id);
+    if (!todo) return;
+
+    // Get title (first line of content)
+    const lines = todo.content.split('\n');
+    const title = lines[0];
+    const description = lines.slice(1).join('\n').trim();
+
+    // Build event data
+    let eventDate = new Date();
+    let hasSpecificDate = false;
+
+    if (todo.dueDateTime && todo.dueDateTime.date) {
+        hasSpecificDate = true;
+        const dateParts = todo.dueDateTime.date.split('-');
+        const year = parseInt(dateParts[0]);
+        const month = parseInt(dateParts[1]) - 1; // JS months are 0-indexed
+        const day = parseInt(dateParts[2]);
+
+        if (todo.dueDateTime.time) {
+            const timeParts = todo.dueDateTime.time.split(':');
+            const hours = parseInt(timeParts[0]);
+            const minutes = parseInt(timeParts[1]);
+            eventDate = new Date(year, month, day, hours, minutes);
+        } else {
+            // Default to 9 AM if no time specified
+            eventDate = new Date(year, month, day, 9, 0);
+        }
+    } else {
+        // No date specified, default to tomorrow at 9 AM
+        eventDate.setDate(eventDate.getDate() + 1);
+        eventDate.setHours(9, 0, 0, 0);
+    }
+
+    const eventData = {
+        title: title,
+        description: description,
+        startDate: eventDate,
+        endDate: new Date(eventDate.getTime() + (60 * 60 * 1000)) // 1 hour duration
+    };
+
+    const calendarUrl = generateGoogleCalendarUrl(eventData);
+    window.open(calendarUrl, '_blank');
 }
 
 // Delete todo
