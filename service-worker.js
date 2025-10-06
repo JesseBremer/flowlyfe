@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flowlyfe-v10';
+const CACHE_NAME = 'flowlyfe-v12';
 const urlsToCache = [
   '/',
   '/index.html',

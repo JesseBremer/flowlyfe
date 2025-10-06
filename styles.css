@@ -427,6 +427,15 @@ main {
     background-color: #eafaf1;
 }
 
+.calendar-btn {
+    border-color: #e67e22;
+}
+
+.calendar-btn:hover {
+    border-color: #d35400;
+    background-color: #fef5e7;
+}
+
 .todo-options {
     display: flex;
     flex-direction: column;

@@ -254,6 +254,19 @@ function processTo(category, sublist = null) {
         closeProcessModal();
         renderInbox();
         updateCounts();
+    } else if (category === 'calendar') {
+        // Parse calendar event and open Google Calendar
+        const eventData = parseCalendarEvent(item.content);
+        const calendarUrl = generateGoogleCalendarUrl(eventData);
+
+        // Open Google Calendar in new tab
+        window.open(calendarUrl, '_blank');
+
+        // Remove from inbox
+        saveData();
+        closeProcessModal();
+        renderInbox();
+        updateCounts();
     }
 }
 
@@ -308,6 +321,181 @@ function parseContact(text) {
         .trim();
 
     return { firstName, lastName, phone, email, notes };
+}
+
+// Parse calendar event from text
+function parseCalendarEvent(text) {
+    let title = '';
+    let startDate = null;
+    let startTime = '';
+    let endTime = '';
+    let description = '';
+
+    const now = new Date();
+    const lowerText = text.toLowerCase();
+
+    // Extract time first (e.g., "3pm", "3:30pm", "15:00", "7pm-9pm")
+    const timeRangeMatch = text.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?\s*-\s*(\d{1,2}):?(\d{2})?\s*(am|pm)?/i);
+    if (timeRangeMatch) {
+        startTime = timeRangeMatch[1] + (timeRangeMatch[2] ? ':' + timeRangeMatch[2] : '') + (timeRangeMatch[3] || '');
+        endTime = timeRangeMatch[4] + (timeRangeMatch[5] ? ':' + timeRangeMatch[5] : '') + (timeRangeMatch[6] || '');
+    } else {
+        const timeMatches = text.match(/\b(\d{1,2}):?(\d{2})?\s*(am|pm)?\b/gi);
+        if (timeMatches && timeMatches.length > 0) {
+            startTime = timeMatches[0];
+            if (timeMatches.length > 1) {
+                endTime = timeMatches[1];
+            }
+        }
+    }
+
+    // Try to extract dates
+    // Pattern: "friday 10th" or "friday the 10th"
+    const dayWithOrdinal = lowerText.match(/(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s+(the\s+)?(\d{1,2})(st|nd|rd|th)?/i);
+    if (dayWithOrdinal) {
+        const dayName = dayWithOrdinal[1].toLowerCase();
+        const dayNum = parseInt(dayWithOrdinal[3]);
+
+        // Find the next occurrence of this day of week
+        const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const targetDayIndex = daysOfWeek.indexOf(dayName);
+        const currentDayIndex = now.getDay();
+
+        let daysUntilTarget = targetDayIndex - currentDayIndex;
+        if (daysUntilTarget <= 0) daysUntilTarget += 7;
+
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() + daysUntilTarget);
+
+        // Set the specific day of month if provided
+        if (dayNum) {
+            startDate.setDate(dayNum);
+        }
+    }
+    // Pattern: "today" or "tomorrow"
+    else if (lowerText.includes('today')) {
+        startDate = new Date(now);
+    } else if (lowerText.includes('tomorrow')) {
+        startDate = new Date(now);
+        startDate.setDate(startDate.getDate() + 1);
+    }
+    // Pattern: day of week only (e.g., "friday")
+    else {
+        const dayMatch = lowerText.match(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i);
+        if (dayMatch) {
+            const dayName = dayMatch[1].toLowerCase();
+            const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const targetDayIndex = daysOfWeek.indexOf(dayName);
+            const currentDayIndex = now.getDay();
+
+            let daysUntilTarget = targetDayIndex - currentDayIndex;
+            if (daysUntilTarget <= 0) daysUntilTarget += 7;
+
+            startDate = new Date(now);
+            startDate.setDate(now.getDate() + daysUntilTarget);
+        }
+    }
+
+    // Pattern: MM/DD/YYYY
+    const slashDateMatch = text.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+    if (slashDateMatch && !startDate) {
+        startDate = new Date(slashDateMatch[0]);
+    }
+
+    // Pattern: "Dec 25" or "December 25"
+    const monthDateMatch = text.match(/(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(\d{1,2})/i);
+    if (monthDateMatch && !startDate) {
+        const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+        const monthIndex = monthNames.findIndex(m => monthDateMatch[1].toLowerCase().startsWith(m));
+        const day = parseInt(monthDateMatch[2]);
+        startDate = new Date(now.getFullYear(), monthIndex, day);
+    }
+
+    // Extract title by removing date/time keywords
+    const lines = text.split('\n');
+    title = lines[0].trim();
+
+    // Remove all date/time patterns from title
+    title = title
+        .replace(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi, '')
+        .replace(/\b(the\s+)?(\d{1,2})(st|nd|rd|th)\b/gi, '')
+        .replace(/\b(today|tomorrow)\b/gi, '')
+        .replace(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{1,2}\b/gi, '')
+        .replace(/\d{1,2}\/\d{1,2}\/\d{2,4}/g, '')
+        .replace(/\d{1,2}:?\d{0,2}\s*(am|pm)?(\s*-\s*\d{1,2}:?\d{0,2}\s*(am|pm)?)?/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    // Remaining lines as description
+    if (lines.length > 1) {
+        description = lines.slice(1).join('\n').trim();
+    }
+
+    return { title, startDate, startTime, endTime, description };
+}
+
+// Generate Google Calendar URL
+function generateGoogleCalendarUrl(eventData) {
+    const { title, startDate, startTime, endTime, description } = eventData;
+
+    // If no date, default to today
+    const date = startDate || new Date();
+
+    // Format date as YYYYMMDD
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    // Parse time or default to current time
+    let startHour = new Date().getHours();
+    let startMin = 0;
+
+    if (startTime) {
+        const timeParts = startTime.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/i);
+        if (timeParts) {
+            startHour = parseInt(timeParts[1]);
+            startMin = timeParts[2] ? parseInt(timeParts[2]) : 0;
+
+            // Convert to 24-hour format if PM
+            if (timeParts[3] && timeParts[3].toLowerCase() === 'pm' && startHour < 12) {
+                startHour += 12;
+            } else if (timeParts[3] && timeParts[3].toLowerCase() === 'am' && startHour === 12) {
+                startHour = 0;
+            }
+        }
+    }
+
+    // End time defaults to 1 hour after start
+    let endHour = startHour + 1;
+    let endMin = startMin;
+
+    if (endTime) {
+        const timeParts = endTime.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/i);
+        if (timeParts) {
+            endHour = parseInt(timeParts[1]);
+            endMin = timeParts[2] ? parseInt(timeParts[2]) : 0;
+
+            if (timeParts[3] && timeParts[3].toLowerCase() === 'pm' && endHour < 12) {
+                endHour += 12;
+            } else if (timeParts[3] && timeParts[3].toLowerCase() === 'am' && endHour === 12) {
+                endHour = 0;
+            }
+        }
+    }
+
+    // Format times as YYYYMMDDTHHMMSS
+    const startDateTime = `${year}${month}${day}T${String(startHour).padStart(2, '0')}${String(startMin).padStart(2, '0')}00`;
+    const endDateTime = `${year}${month}${day}T${String(endHour).padStart(2, '0')}${String(endMin).padStart(2, '0')}00`;
+
+    // Build Google Calendar URL
+    const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: title || 'New Event',
+        dates: `${startDateTime}/${endDateTime}`,
+        details: description || ''
+    });
+
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
 // Delete inbox item
