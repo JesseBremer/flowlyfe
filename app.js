@@ -246,43 +246,53 @@ function processTo(category, sublist = null) {
 
 // Parse contact information from text
 function parseContact(text) {
-    const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-
     let firstName = '';
     let lastName = '';
     let phone = '';
     let email = '';
     let notes = '';
 
-    // Try to extract phone number
-    const phoneMatch = text.match(/[\d\s\-\(\)\+]{7,}/);
-    if (phoneMatch) {
-        phone = phoneMatch[0].replace(/\s/g, '');
+    // Helper function to capitalize first letter
+    function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
     }
 
-    // Try to extract email
+    // Extract phone number (pattern like 343-999-9999 or 3439999999)
+    const phoneMatch = text.match(/\b[\d\-\(\)\+]{7,}\b/);
+    if (phoneMatch) {
+        phone = phoneMatch[0];
+    }
+
+    // Extract email
     const emailMatch = text.match(/[\w\.-]+@[\w\.-]+\.\w+/);
     if (emailMatch) {
         email = emailMatch[0];
     }
 
-    // First non-phone/email line is likely the name
-    for (let line of lines) {
-        if (!line.match(/[\d\s\-\(\)\+]{7,}/) && !line.match(/[\w\.-]+@[\w\.-]+\.\w+/)) {
-            const nameParts = line.split(/\s+/);
-            if (nameParts.length >= 2) {
-                firstName = nameParts[0];
-                lastName = nameParts.slice(1).join(' ');
-            } else {
-                firstName = line;
-            }
-            break;
-        }
+    // Remove phone and email from text to get name
+    let nameText = text;
+    if (phone) {
+        nameText = nameText.replace(phone, '');
+    }
+    if (email) {
+        nameText = nameText.replace(email, '');
     }
 
-    // Everything else is notes
-    const nameAndContactPattern = new RegExp(`${firstName}|${lastName}|${phone}|${email}`.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    notes = text.replace(nameAndContactPattern, '').trim();
+    // Extract name from remaining text
+    const nameParts = nameText.trim().split(/\s+/).filter(part => part.length > 0);
+    if (nameParts.length >= 2) {
+        firstName = capitalize(nameParts[0]);
+        lastName = nameParts.slice(1).map(capitalize).join(' ');
+    } else if (nameParts.length === 1) {
+        firstName = capitalize(nameParts[0]);
+    }
+
+    // Any remaining text after removing name, phone, email is notes
+    notes = text
+        .replace(phone || '', '')
+        .replace(email || '', '')
+        .replace(new RegExp(nameParts.join('\\s+'), 'i'), '')
+        .trim();
 
     return { firstName, lastName, phone, email, notes };
 }
@@ -527,6 +537,10 @@ function loadData() {
         const storedCategories = localStorage.getItem(CATEGORIES_KEY);
         if (storedCategories) {
             state.categories = JSON.parse(storedCategories);
+            // Ensure contacts array exists (for backwards compatibility)
+            if (!state.categories.contacts) {
+                state.categories.contacts = [];
+            }
         }
     } catch (e) {
         console.error('Error loading from localStorage:', e);
