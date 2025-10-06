@@ -85,6 +85,16 @@
             </div>
         </main>
 
+        <main id="contactsPage" class="page">
+            <div class="page-header">
+                <button class="nav-btn back-btn" data-page="capture">← Back</button>
+                <h2>Contacts</h2>
+            </div>
+            <div id="contactsList" class="contacts-list">
+                <!-- Contacts will be added here -->
+            </div>
+        </main>
+
         <!-- Process Modal -->
         <div id="processModal" class="modal">
             <div class="modal-content">
@@ -94,6 +104,10 @@
                 <div class="process-buttons">
                     <button onclick="processTo('thoughts')" class="process-option thoughts-btn">
                         💭 Thought/Idea
+                    </button>
+
+                    <button onclick="processTo('contacts')" class="process-option contacts-btn">
+                        👤 Contact
                     </button>
 
                     <div class="todo-options">
@@ -131,6 +145,10 @@
             <button class="nav-btn" data-page="todos">
                 <span class="nav-icon">✓</span>
                 <span class="nav-label">To-Dos</span>
+            </button>
+            <button class="nav-btn" data-page="contacts">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Contacts</span>
             </button>
         </nav>
     </div>

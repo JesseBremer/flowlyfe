@@ -418,6 +418,15 @@ main {
     background-color: #f4ecf7;
 }
 
+.contacts-btn {
+    border-color: #27ae60;
+}
+
+.contacts-btn:hover {
+    border-color: #229954;
+    background-color: #eafaf1;
+}
+
 .todo-options {
     display: flex;
     flex-direction: column;
@@ -489,6 +498,78 @@ main {
 .nav-label {
     font-size: 0.7rem;
     font-weight: 500;
+}
+
+/* Contacts page */
+.contacts-list {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.contact-item {
+    background-color: var(--card-bg);
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.contact-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    gap: 0.5rem;
+}
+
+.contact-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.export-btn {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.export-btn:hover {
+    background-color: #3dd5b3;
+}
+
+.contact-details {
+    margin-bottom: 0.75rem;
+}
+
+.contact-detail {
+    margin-bottom: 0.25rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.contact-detail strong {
+    color: #666;
+    font-weight: 600;
+}
+
+.contact-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: #666;
+    padding-top: 0.5rem;
+    border-top: 1px solid #eee;
+}
+
+.contact-time {
+    font-style: italic;
 }
 
 /* Mobile-first responsive design */

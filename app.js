@@ -14,7 +14,8 @@ const state = {
             active: [],
             someday: [],
             awaiting: []
-        }
+        },
+        contacts: []
     },
     currentPage: 'capture',
     processingItem: null
@@ -32,6 +33,7 @@ let capturePage;
 let inboxPage;
 let thoughtsPage;
 let todosPage;
+let contactsPage;
 let processModal;
 
 // Initialize app
@@ -50,6 +52,7 @@ function init() {
     inboxPage = document.getElementById('inboxPage');
     thoughtsPage = document.getElementById('thoughtsPage');
     todosPage = document.getElementById('todosPage');
+    contactsPage = document.getElementById('contactsPage');
     processModal = document.getElementById('processModal');
 
     // Load data from localStorage
@@ -160,6 +163,9 @@ function showPage(page) {
     } else if (page === 'todos') {
         todosPage.classList.add('active');
         renderTodos();
+    } else if (page === 'contacts') {
+        contactsPage.classList.add('active');
+        renderContacts();
     }
 }
 
@@ -225,12 +231,60 @@ function processTo(category, sublist = null) {
     } else if (category === 'todos' && sublist) {
         item.completed = false;
         state.categories.todos[sublist].unshift(item);
+    } else if (category === 'contacts') {
+        // Parse contact info
+        const contactData = parseContact(item.content);
+        item.contactData = contactData;
+        state.categories.contacts.unshift(item);
     }
 
     saveData();
     closeProcessModal();
     renderInbox();
     updateCounts();
+}
+
+// Parse contact information from text
+function parseContact(text) {
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+
+    let firstName = '';
+    let lastName = '';
+    let phone = '';
+    let email = '';
+    let notes = '';
+
+    // Try to extract phone number
+    const phoneMatch = text.match(/[\d\s\-\(\)\+]{7,}/);
+    if (phoneMatch) {
+        phone = phoneMatch[0].replace(/\s/g, '');
+    }
+
+    // Try to extract email
+    const emailMatch = text.match(/[\w\.-]+@[\w\.-]+\.\w+/);
+    if (emailMatch) {
+        email = emailMatch[0];
+    }
+
+    // First non-phone/email line is likely the name
+    for (let line of lines) {
+        if (!line.match(/[\d\s\-\(\)\+]{7,}/) && !line.match(/[\w\.-]+@[\w\.-]+\.\w+/)) {
+            const nameParts = line.split(/\s+/);
+            if (nameParts.length >= 2) {
+                firstName = nameParts[0];
+                lastName = nameParts.slice(1).join(' ');
+            } else {
+                firstName = line;
+            }
+            break;
+        }
+    }
+
+    // Everything else is notes
+    const nameAndContactPattern = new RegExp(`${firstName}|${lastName}|${phone}|${email}`.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    notes = text.replace(nameAndContactPattern, '').trim();
+
+    return { firstName, lastName, phone, email, notes };
 }
 
 // Delete inbox item
@@ -330,6 +384,101 @@ function deleteTodo(listName, id) {
     }
 }
 
+// Render Contacts page
+function renderContacts() {
+    const contactsList = document.getElementById('contactsList');
+
+    if (state.categories.contacts.length === 0) {
+        contactsList.innerHTML = `
+            <div class="empty-state">
+                <p>No contacts yet</p>
+            </div>
+        `;
+        return;
+    }
+
+    contactsList.innerHTML = state.categories.contacts.map(item => {
+        const data = item.contactData || {};
+        const displayName = `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Unknown';
+
+        return `
+            <div class="contact-item" data-id="${item.id}">
+                <div class="contact-header">
+                    <div class="contact-name">${escapeHtml(displayName)}</div>
+                    <button class="export-btn" onclick="exportContact(${item.id})">Export vCard</button>
+                </div>
+                <div class="contact-details">
+                    ${data.phone ? `<div class="contact-detail"><strong>Phone:</strong> ${escapeHtml(data.phone)}</div>` : ''}
+                    ${data.email ? `<div class="contact-detail"><strong>Email:</strong> ${escapeHtml(data.email)}</div>` : ''}
+                    ${data.notes ? `<div class="contact-detail"><strong>Notes:</strong> ${escapeHtml(data.notes)}</div>` : ''}
+                </div>
+                <div class="contact-meta">
+                    <span class="contact-time">${formatTimestamp(item.timestamp)}</span>
+                    <button class="delete-btn" onclick="deleteContact(${item.id})">Delete</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Export contact as vCard
+function exportContact(id) {
+    const contact = state.categories.contacts.find(c => c.id === id);
+    if (!contact || !contact.contactData) return;
+
+    const data = contact.contactData;
+    const vCard = generateVCard(data);
+
+    // Create download
+    const blob = new Blob([vCard], { type: 'text/vcard' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${data.firstName || 'contact'}_${data.lastName || ''}.vcf`.replace(/\s+/g, '_');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+// Generate vCard format
+function generateVCard(data) {
+    const lines = [
+        'BEGIN:VCARD',
+        'VERSION:3.0'
+    ];
+
+    if (data.firstName || data.lastName) {
+        lines.push(`N:${data.lastName || ''};${data.firstName || ''};;;`);
+        lines.push(`FN:${data.firstName || ''} ${data.lastName || ''}`.trim());
+    }
+
+    if (data.phone) {
+        lines.push(`TEL;TYPE=CELL:${data.phone}`);
+    }
+
+    if (data.email) {
+        lines.push(`EMAIL:${data.email}`);
+    }
+
+    if (data.notes) {
+        lines.push(`NOTE:${data.notes.replace(/\n/g, '\\n')}`);
+    }
+
+    lines.push('END:VCARD');
+
+    return lines.join('\r\n');
+}
+
+// Delete contact
+function deleteContact(id) {
+    if (confirm('Delete this contact?')) {
+        state.categories.contacts = state.categories.contacts.filter(c => c.id !== id);
+        saveData();
+        renderContacts();
+    }
+}
+
 // Format timestamp
 function formatTimestamp(timestamp) {
     const date = new Date(timestamp);
@@ -388,7 +537,8 @@ function loadData() {
                 active: [],
                 someday: [],
                 awaiting: []
-            }
+            },
+            contacts: []
         };
     }
 }
