@@ -14,8 +14,7 @@ const state = {
             active: [],
             someday: [],
             awaiting: []
-        },
-        contacts: []
+        }
     },
     currentPage: 'capture',
     processingItem: null
@@ -33,7 +32,6 @@ let capturePage;
 let inboxPage;
 let thoughtsPage;
 let todosPage;
-let contactsPage;
 let processModal;
 
 // Initialize app
@@ -52,7 +50,6 @@ function init() {
     inboxPage = document.getElementById('inboxPage');
     thoughtsPage = document.getElementById('thoughtsPage');
     todosPage = document.getElementById('todosPage');
-    contactsPage = document.getElementById('contactsPage');
     processModal = document.getElementById('processModal');
 
     // Load data from localStorage
@@ -163,9 +160,6 @@ function showPage(page) {
     } else if (page === 'todos') {
         todosPage.classList.add('active');
         renderTodos();
-    } else if (page === 'contacts') {
-        contactsPage.classList.add('active');
-        renderContacts();
     }
 }
 
@@ -228,20 +222,39 @@ function processTo(category, sublist = null) {
     // Add to category
     if (category === 'thoughts') {
         state.categories.thoughts.unshift(item);
+        saveData();
+        closeProcessModal();
+        renderInbox();
+        updateCounts();
     } else if (category === 'todos' && sublist) {
         item.completed = false;
         state.categories.todos[sublist].unshift(item);
+        saveData();
+        closeProcessModal();
+        renderInbox();
+        updateCounts();
     } else if (category === 'contacts') {
-        // Parse contact info
+        // Parse contact info and immediately export vCard
         const contactData = parseContact(item.content);
-        item.contactData = contactData;
-        state.categories.contacts.unshift(item);
-    }
+        const vCard = generateVCard(contactData);
 
-    saveData();
-    closeProcessModal();
-    renderInbox();
-    updateCounts();
+        // Create download
+        const blob = new Blob([vCard], { type: 'text/vcard' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${contactData.firstName || 'contact'}_${contactData.lastName || ''}.vcf`.replace(/\s+/g, '_');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        // Remove from inbox (don't save to contacts category)
+        saveData();
+        closeProcessModal();
+        renderInbox();
+        updateCounts();
+    }
 }
 
 // Parse contact information from text
@@ -394,63 +407,6 @@ function deleteTodo(listName, id) {
     }
 }
 
-// Render Contacts page
-function renderContacts() {
-    const contactsList = document.getElementById('contactsList');
-
-    if (state.categories.contacts.length === 0) {
-        contactsList.innerHTML = `
-            <div class="empty-state">
-                <p>No contacts yet</p>
-            </div>
-        `;
-        return;
-    }
-
-    contactsList.innerHTML = state.categories.contacts.map(item => {
-        const data = item.contactData || {};
-        const displayName = `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Unknown';
-
-        return `
-            <div class="contact-item" data-id="${item.id}">
-                <div class="contact-header">
-                    <div class="contact-name">${escapeHtml(displayName)}</div>
-                    <button class="export-btn" onclick="exportContact(${item.id})">Export vCard</button>
-                </div>
-                <div class="contact-details">
-                    ${data.phone ? `<div class="contact-detail"><strong>Phone:</strong> ${escapeHtml(data.phone)}</div>` : ''}
-                    ${data.email ? `<div class="contact-detail"><strong>Email:</strong> ${escapeHtml(data.email)}</div>` : ''}
-                    ${data.notes ? `<div class="contact-detail"><strong>Notes:</strong> ${escapeHtml(data.notes)}</div>` : ''}
-                </div>
-                <div class="contact-meta">
-                    <span class="contact-time">${formatTimestamp(item.timestamp)}</span>
-                    <button class="delete-btn" onclick="deleteContact(${item.id})">Delete</button>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-// Export contact as vCard
-function exportContact(id) {
-    const contact = state.categories.contacts.find(c => c.id === id);
-    if (!contact || !contact.contactData) return;
-
-    const data = contact.contactData;
-    const vCard = generateVCard(data);
-
-    // Create download
-    const blob = new Blob([vCard], { type: 'text/vcard' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${data.firstName || 'contact'}_${data.lastName || ''}.vcf`.replace(/\s+/g, '_');
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-}
-
 // Generate vCard format
 function generateVCard(data) {
     const lines = [
@@ -478,15 +434,6 @@ function generateVCard(data) {
     lines.push('END:VCARD');
 
     return lines.join('\r\n');
-}
-
-// Delete contact
-function deleteContact(id) {
-    if (confirm('Delete this contact?')) {
-        state.categories.contacts = state.categories.contacts.filter(c => c.id !== id);
-        saveData();
-        renderContacts();
-    }
 }
 
 // Format timestamp
@@ -537,10 +484,6 @@ function loadData() {
         const storedCategories = localStorage.getItem(CATEGORIES_KEY);
         if (storedCategories) {
             state.categories = JSON.parse(storedCategories);
-            // Ensure contacts array exists (for backwards compatibility)
-            if (!state.categories.contacts) {
-                state.categories.contacts = [];
-            }
         }
     } catch (e) {
         console.error('Error loading from localStorage:', e);
@@ -551,8 +494,7 @@ function loadData() {
                 active: [],
                 someday: [],
                 awaiting: []
-            },
-            contacts: []
+            }
         };
     }
 }
