@@ -67,6 +67,8 @@
     let flowformStatusEl;
     let journalDetailContent;
     let journalDeleteBtn;
+    let journalDoneList;
+    let journalDoneDateLabel;
 
     let freeformDraftTimeout;
 
@@ -82,6 +84,7 @@
         journalViews.roteform = document.getElementById('journalRoteformView');
         journalViews.entries = document.getElementById('journalEntriesView');
         journalViews.detail = document.getElementById('journalDetailView');
+        journalViews.done = document.getElementById('journalDoneView');
 
         flowformContainer = document.getElementById('flowformContainer');
         freeformWordCount = document.getElementById('freeformWordCount');
@@ -89,6 +92,8 @@
         roteformStatus = document.getElementById('roteformStatus');
         journalDetailContent = document.getElementById('journalDetailContent');
         journalDeleteBtn = document.getElementById('journalDeleteBtn');
+        journalDoneList = document.getElementById('journalDoneList');
+        journalDoneDateLabel = document.getElementById('doneSummaryDate');
 
         journalState.entries = loadJournalEntries();
         initializeFlowformState();
@@ -97,6 +102,9 @@
         setupRoteform();
         renderFlowformHome();
         renderJournalEntriesList();
+        renderDoneView();
+
+        document.addEventListener('journal:refreshDone', renderDoneView);
 
         journalState.initialized = true;
     }
@@ -185,6 +193,10 @@
             case 'roteform':
                 showJournalView('roteform');
                 break;
+            case 'done':
+                showJournalView('done');
+                renderDoneView();
+                break;
             case 'entries':
                 showJournalView('entries');
                 renderJournalEntriesList();
@@ -230,6 +242,42 @@
             renderJournalEntriesList();
         } catch (err) {
             console.error('Error saving journal entries', err);
+        }
+    }
+
+    function getTodosState() {
+        if (typeof window === 'undefined') return null;
+        if (!window.state || !window.state.categories || !window.state.categories.todos) {
+            return null;
+        }
+        return window.state.categories.todos;
+    }
+
+    function formatFullDate(dateKey) {
+        const parts = dateKey.split('-');
+        if (parts.length !== 3) return dateKey;
+        const dateObj = new Date(`${dateKey}T00:00:00`);
+        const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+        return dateObj.toLocaleDateString(undefined, options);
+    }
+
+    function formatTimeLabel(isoString) {
+        if (!isoString) return '';
+        const date = new Date(isoString);
+        if (Number.isNaN(date.getTime())) return '';
+        return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function formatListName(listName) {
+        switch (listName) {
+            case 'active':
+                return 'Active';
+            case 'someday':
+                return 'Someday';
+            case 'awaiting':
+                return 'Awaiting';
+            default:
+                return listName;
         }
     }
 
@@ -979,6 +1027,84 @@
         `).join('');
     }
 
+    function renderDoneView() {
+        if (!journalDoneList) return;
+
+        const todos = getTodosState();
+        if (!todos) {
+            journalDoneList.innerHTML = `
+                <div class="journal-empty-state">
+                    <p>Completed tasks will appear here.</p>
+                </div>
+            `;
+            if (journalDoneDateLabel) journalDoneDateLabel.textContent = '';
+            return;
+        }
+
+        const completed = [];
+        Object.entries(todos).forEach(([listName, items]) => {
+            items.forEach(item => {
+                if (item.completed) {
+                    completed.push({
+                        id: item.id,
+                        content: item.content,
+                        completedAt: item.completedAt || item.timestamp,
+                        list: listName
+                    });
+                }
+            });
+        });
+
+        if (!completed.length) {
+            journalDoneList.innerHTML = `
+                <div class="journal-empty-state">
+                    <p>No completed tasks yet. Once you finish items, they’ll land here automatically.</p>
+                </div>
+            `;
+            if (journalDoneDateLabel) journalDoneDateLabel.textContent = '';
+            return;
+        }
+
+        const grouped = completed.reduce((acc, item) => {
+            const when = item.completedAt || new Date().toISOString();
+            const dateKey = (new Date(when)).toISOString().split('T')[0];
+            if (!acc[dateKey]) acc[dateKey] = [];
+            acc[dateKey].push(item);
+            return acc;
+        }, {});
+
+        const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+        if (journalDoneDateLabel && sortedDates.length) {
+            journalDoneDateLabel.textContent = `Latest entry: ${formatFullDate(sortedDates[0])}`;
+        }
+
+        journalDoneList.innerHTML = sortedDates.map(dateKey => {
+            const items = grouped[dateKey].sort((a, b) => {
+                const aTime = new Date(a.completedAt || 0).getTime();
+                const bTime = new Date(b.completedAt || 0).getTime();
+                return bTime - aTime;
+            });
+            const prettyDate = formatFullDate(dateKey);
+            const tasks = items.map(item => `
+                <div class="journal-done-item">
+                    <div class="journal-done-time">${formatTimeLabel(item.completedAt)}</div>
+                    <div class="journal-done-text">${escapeHtml(item.content)}</div>
+                    <span class="journal-done-pill">${formatListName(item.list)}</span>
+                </div>
+            `).join('');
+
+            return `
+                <section class="journal-done-section">
+                    <header class="journal-done-header">
+                        <h4>${prettyDate}</h4>
+                        <span class="journal-done-count">${items.length} ${items.length === 1 ? 'task' : 'tasks'}</span>
+                    </header>
+                    <div class="journal-done-items">${tasks}</div>
+                </section>
+            `;
+        }).join('');
+    }
+
     function buildEntryPreview(entry) {
         if (entry.type === 'freeform') {
             const text = entry.content || '';
@@ -1181,4 +1307,3 @@
         handleJournalNavigation(journalState.view || 'home');
     };
 })();
-

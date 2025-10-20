@@ -119,8 +119,10 @@ function init() {
     window.addEventListener('hashchange', () => handleHashRoute());
 
     if (!handledHash) {
-        showPage(state.currentPage);
-    }
+    showPage(state.currentPage);
+
+    window.state = state;
+}
 
     document.addEventListener('click', event => {
         if (!event.target.closest('.category-item-actions')) {
@@ -229,6 +231,10 @@ function showStatus(message, type) {
         captureStatus.textContent = '';
         captureStatus.className = 'status-message';
     }, 2000);
+}
+
+function refreshDoneLogView() {
+    document.dispatchEvent(new CustomEvent('journal:refreshDone'));
 }
 
 function rotatePlaceholder() {
@@ -893,6 +899,7 @@ function moveThoughtToTodo(id, listName) {
     renderThoughts();
     renderTodoList(listName, `${listName}TodosList`);
     showStatus('Moved to To-Do list', 'success');
+    refreshDoneLogView();
 }
 
 // Render Todos page
@@ -941,8 +948,14 @@ function toggleTodo(listName, id) {
     const todo = state.categories.todos[listName].find(t => t.id === id);
     if (todo) {
         todo.completed = !todo.completed;
+        if (todo.completed) {
+            todo.completedAt = new Date().toISOString();
+        } else {
+            delete todo.completedAt;
+        }
         saveData();
         renderTodoList(listName, `${listName}TodosList`);
+        refreshDoneLogView();
     }
 }
 
@@ -1006,6 +1019,7 @@ function moveToList(toList) {
     saveData();
     renderTodos();
     closeMoveModal();
+    refreshDoneLogView();
 }
 
 // Open todo detail modal
@@ -1083,6 +1097,7 @@ function saveTodoFromDetail() {
     saveData();
     renderTodos();
     closeTodoDetail();
+    refreshDoneLogView();
 }
 
 // Format due date/time for display
@@ -1128,6 +1143,7 @@ function deleteTodoFromDetail() {
         saveData();
         renderTodos();
         closeTodoDetail();
+        refreshDoneLogView();
     }
 }
 
@@ -1187,6 +1203,7 @@ function deleteTodo(listName, id) {
         state.categories.todos[listName] = state.categories.todos[listName].filter(t => t.id !== id);
         saveData();
         renderTodoList(listName, `${listName}TodosList`);
+        refreshDoneLogView();
     }
 }
 

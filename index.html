@@ -94,11 +94,6 @@
         </main>
 
         <main id="journalPage" class="page">
-            <section class="journal-hero">
-                <h2>Journal Studio</h2>
-                <p class="journal-tagline">Three ways to reflect, all tucked into your Flowlyfe rhythm.</p>
-            </section>
-
             <section id="journalHomeView" class="journal-view active">
                 <div class="journal-grid">
                     <button class="journal-card" data-journal-target="flowform">
@@ -120,6 +115,13 @@
                         <h3>Roteform</h3>
                         <p>Seven science-backed reflections to close the day with clarity.</p>
                         <span class="journal-card-cta">Begin Reflection</span>
+                    </button>
+
+                    <button class="journal-card" data-journal-target="done">
+                        <div class="journal-card-icon">✅</div>
+                        <h3>Done Log</h3>
+                        <p>Celebrate completed tasks and see your progress by day.</p>
+                        <span class="journal-card-cta">Review Wins</span>
                     </button>
                 </div>
 
@@ -238,6 +240,18 @@
                     </div>
 
                     <div id="roteformStatus" class="journal-status"></div>
+                </div>
+            </section>
+
+            <section id="journalDoneView" class="journal-view">
+                <div class="journal-scroll">
+                    <button class="journal-back-btn" data-journal-target="home">← Journal Home</button>
+                    <header class="journal-section-header">
+                        <h3>Completed To-Dos</h3>
+                        <p class="journal-date" id="doneSummaryDate"></p>
+                    </header>
+
+                    <div id="journalDoneList" class="journal-done-list"></div>
                 </div>
             </section>
 
