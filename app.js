@@ -709,10 +709,17 @@ function renderThoughts() {
 
     thoughtsList.innerHTML = state.categories.thoughts.map(item => `
         <div class="category-item" data-id="${item.id}">
-            <div class="category-item-content">${escapeHtml(item.content)}</div>
+            <div class="category-item-content" data-view>
+                <div class="category-item-text">${escapeHtml(item.content)}</div>
+            </div>
             <div class="category-item-meta">
                 <span class="category-item-time">${formatTimestamp(item.timestamp)}</span>
-                <button class="delete-btn" onclick="deleteThought(${item.id})">Delete</button>
+                <div class="category-item-actions">
+                    <button class="edit-btn" data-action="edit" onclick="startThoughtEdit(${item.id})">Edit</button>
+                    <button class="save-btn" data-action="save" onclick="saveThoughtEdit(${item.id})" hidden>Save</button>
+                    <button class="cancel-btn" data-action="cancel" onclick="cancelThoughtEdit(${item.id})" hidden>Cancel</button>
+                    <button class="delete-btn" onclick="deleteThought(${item.id})">Delete</button>
+                </div>
             </div>
         </div>
     `).join('');
@@ -725,6 +732,91 @@ function deleteThought(id) {
         saveData();
         renderThoughts();
     }
+}
+
+// Edit thought
+function startThoughtEdit(id) {
+    const container = document.querySelector(`.category-item[data-id="${id}"]`);
+    const thought = state.categories.thoughts.find(item => item.id === id);
+    if (!container || !thought) return;
+
+    const textEl = container.querySelector('.category-item-text');
+    const viewWrap = container.querySelector('[data-view]');
+    const editButton = container.querySelector('[data-action="edit"]');
+    const saveButton = container.querySelector('[data-action="save"]');
+    const cancelButton = container.querySelector('[data-action="cancel"]');
+
+    if (!textEl || !viewWrap || !editButton || !saveButton || !cancelButton) return;
+
+    if (!container.querySelector('textarea')) {
+        const textarea = document.createElement('textarea');
+        textarea.className = 'category-item-editor';
+        textarea.value = thought.content;
+        textarea.rows = Math.min(Math.max(thought.content.split('\n').length, 2), 8);
+        viewWrap.replaceWith(textarea);
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+        editButton.hidden = true;
+        saveButton.hidden = false;
+        cancelButton.hidden = false;
+
+        container.dataset.editing = 'true';
+    }
+}
+
+function saveThoughtEdit(id) {
+    const container = document.querySelector(`.category-item[data-id="${id}"]`);
+    const thought = state.categories.thoughts.find(item => item.id === id);
+    if (!container || !thought) return;
+
+    const textarea = container.querySelector('.category-item-editor');
+    if (!textarea) return;
+
+    const trimmed = textarea.value.trim();
+    if (!trimmed) {
+        alert('Thought cannot be empty');
+        textarea.focus();
+        return;
+    }
+
+    thought.content = trimmed;
+    thought.timestamp = new Date().toISOString();
+    saveData();
+    container.dataset.editing = '';
+    renderThoughts();
+}
+
+function cancelThoughtEdit(id) {
+    const container = document.querySelector(`.category-item[data-id="${id}"]`);
+    const thought = state.categories.thoughts.find(item => item.id === id);
+    if (!container || !thought) return;
+
+    const textarea = container.querySelector('.category-item-editor');
+    if (!textarea) return;
+
+    const viewWrap = document.createElement('div');
+    viewWrap.className = 'category-item-content';
+    viewWrap.setAttribute('data-view', '');
+
+    const textDiv = document.createElement('div');
+    textDiv.className = 'category-item-text';
+    textDiv.textContent = thought.content;
+    viewWrap.appendChild(textDiv);
+
+    textarea.replaceWith(viewWrap);
+
+    const editButton = container.querySelector('[data-action="edit"]');
+    const saveButton = container.querySelector('[data-action="save"]');
+    const cancelButton = container.querySelector('[data-action="cancel"]');
+
+    if (editButton && saveButton && cancelButton) {
+        editButton.hidden = false;
+        saveButton.hidden = true;
+        cancelButton.hidden = true;
+    }
+
+    container.dataset.editing = '';
 }
 
 // Render Todos page
