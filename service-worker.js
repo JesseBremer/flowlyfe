@@ -17,7 +17,8 @@ const RESOURCES = [
   'icons/icon-384x384.png',
   'icons/icon-512x512.png',
   'icons/shortcut-capture.png',
-  'icons/shortcut-inbox.png'
+  'icons/shortcut-inbox.png',
+  'icons/icon-surfing-i.svg'
 ];
 
 const urlsToCache = RESOURCES.map(resource => `${APP_BASE}${resource}`);
