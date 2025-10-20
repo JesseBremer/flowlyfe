@@ -57,4 +57,31 @@
       "purpose": "any maskable"
     }
   ]
+  ,
+  "shortcuts": [
+    {
+      "name": "Quick Capture",
+      "short_name": "Capture",
+      "url": "/#capture",
+      "icons": [
+        {
+          "src": "icons/shortcut-capture.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Open Inbox",
+      "short_name": "Inbox",
+      "url": "/#inbox",
+      "icons": [
+        {
+          "src": "icons/shortcut-inbox.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
 }

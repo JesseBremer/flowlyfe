@@ -22,11 +22,11 @@ const state = {
 
 // DOM elements
 let captureInput;
-let captureBtn;
+let captureFab;
 let captureStatus;
-let viewInboxBtn;
+let inboxBtn;
 let navBtns;
-let inboxCount;
+let inboxBadge;
 let inboxList;
 let capturePage;
 let inboxPage;
@@ -34,6 +34,19 @@ let thoughtsPage;
 let todosPage;
 let journalPage;
 let processModal;
+let focusScrim;
+let captureCard;
+let navInboxBtn;
+let captureAudio = null;
+let lastPlaceholderIndex = -1;
+
+const PLACEHOLDERS = [
+    'Flow your life…',
+    'Catch it before it drifts…',
+    "What\'s circling in your head?",
+    'Type it, tap capture, done.',
+    'One line now, sort later.'
+];
 
 // Initialize app
 function init() {
@@ -41,11 +54,11 @@ function init() {
 
     // Get DOM elements
     captureInput = document.getElementById('captureInput');
-    captureBtn = document.getElementById('captureBtn');
+    captureFab = document.getElementById('captureFab');
     captureStatus = document.getElementById('captureStatus');
-    viewInboxBtn = document.getElementById('viewInboxBtn');
+    inboxBtn = document.getElementById('inboxBtn');
     navBtns = document.querySelectorAll('.nav-btn');
-    inboxCount = document.getElementById('inboxCount');
+    inboxBadge = document.getElementById('inboxBadge');
     inboxList = document.getElementById('inboxList');
     capturePage = document.getElementById('capturePage');
     inboxPage = document.getElementById('inboxPage');
@@ -53,14 +66,35 @@ function init() {
     todosPage = document.getElementById('todosPage');
     journalPage = document.getElementById('journalPage');
     processModal = document.getElementById('processModal');
+    focusScrim = document.getElementById('focusScrim');
+    captureCard = document.getElementById('captureCard');
+    navInboxBtn = document.getElementById('navInbox');
+
+    if (focusScrim) {
+        focusScrim.addEventListener('click', () => {
+            if (captureInput) {
+                captureInput.blur();
+            }
+        });
+    }
 
     // Load data from localStorage
     loadData();
 
     // Event listeners
-    captureBtn.addEventListener('click', handleCapture);
-    captureInput.addEventListener('keydown', handleInputKeydown);
-    viewInboxBtn.addEventListener('click', () => showPage('inbox'));
+    if (captureFab) {
+        captureFab.addEventListener('click', handleCapture);
+    }
+    if (captureInput) {
+        captureInput.addEventListener('keydown', handleInputKeydown);
+        captureInput.addEventListener('input', () => autoExpandTextarea());
+        captureInput.addEventListener('focus', handleCaptureFocus);
+        captureInput.addEventListener('blur', handleCaptureBlur);
+    }
+
+    if (inboxBtn) {
+        inboxBtn.addEventListener('click', () => showPage('inbox'));
+    }
 
     // Navigation buttons
     navBtns.forEach(btn => {
@@ -70,8 +104,9 @@ function init() {
         });
     });
 
-    // Auto-expand textarea
-    captureInput.addEventListener('input', autoExpandTextarea);
+    // Initialize capture UI helpers
+    rotatePlaceholder();
+    autoExpandTextarea();
 
     // Update UI
     updateCounts();
@@ -80,17 +115,28 @@ function init() {
         initJournal();
     }
 
-    showPage(state.currentPage);
+    const handledHash = handleHashRoute(true);
+    window.addEventListener('hashchange', () => handleHashRoute());
+
+    if (!handledHash) {
+        showPage(state.currentPage);
+    }
 }
 
 // Auto-expand textarea as user types
-function autoExpandTextarea() {
-    captureInput.style.height = 'auto';
-    captureInput.style.height = captureInput.scrollHeight + 'px';
+function autoExpandTextarea(el = captureInput) {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 220) + 'px';
 }
 
 // Handle keyboard shortcuts in capture input
 function handleInputKeydown(e) {
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        captureInput.blur();
+        return;
+    }
     // Enter to capture (Shift+Enter for new line)
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -98,12 +144,36 @@ function handleInputKeydown(e) {
     }
 }
 
+function handleCaptureFocus() {
+    if (captureCard) {
+        captureCard.classList.add('is-focused');
+    }
+    if (focusScrim) {
+        focusScrim.classList.add('is-visible');
+    }
+}
+
+function handleCaptureBlur() {
+    if (captureCard) {
+        captureCard.classList.remove('is-focused');
+    }
+    if (focusScrim) {
+        focusScrim.classList.remove('is-visible');
+    }
+    if (captureInput && !captureInput.value.trim()) {
+        rotatePlaceholder();
+    }
+}
+
 // Capture item
 function handleCapture() {
+    if (!captureInput) return;
+
     const content = captureInput.value.trim();
 
     if (!content) {
         showStatus('Please enter something to capture', 'error');
+        playHapticAndSound(true);
         return;
     }
 
@@ -119,12 +189,25 @@ function handleCapture() {
 
     // Clear input and reset height
     captureInput.value = '';
-    captureInput.style.height = 'auto';
+    autoExpandTextarea();
+    rotatePlaceholder();
+
+    if (captureFab) {
+        captureFab.classList.remove('is-rippling');
+        // force reflow
+        void captureFab.offsetWidth;
+        captureFab.classList.add('is-rippling');
+        setTimeout(() => captureFab.classList.remove('is-rippling'), 480);
+    }
+
+    playHapticAndSound(false);
+    flashInboxIcon();
+
     // Show success message
     showStatus('Captured!', 'success');
 
     // Update counts
-    updateCounts();
+    updateCounts(true);
 
     // Focus back on input
     captureInput.focus();
@@ -142,14 +225,94 @@ function showStatus(message, type) {
     }, 2000);
 }
 
+function rotatePlaceholder() {
+    if (!captureInput || !PLACEHOLDERS.length) return;
+    let nextIndex = Math.floor(Math.random() * PLACEHOLDERS.length);
+    if (PLACEHOLDERS.length > 1) {
+        while (nextIndex === lastPlaceholderIndex) {
+            nextIndex = Math.floor(Math.random() * PLACEHOLDERS.length);
+        }
+    }
+    lastPlaceholderIndex = nextIndex;
+    captureInput.placeholder = PLACEHOLDERS[nextIndex];
+}
+
 // Update all count badges
-function updateCounts() {
-    inboxCount.textContent = state.inbox.length;
+function updateCounts(animateBadge = false) {
+    updateInboxBadge(animateBadge);
+}
+
+function updateInboxBadge(animate = false) {
+    if (!inboxBadge) return;
+    inboxBadge.textContent = state.inbox.length;
+    if (animate) {
+        inboxBadge.classList.remove('bump');
+        void inboxBadge.offsetWidth;
+        inboxBadge.classList.add('bump');
+    } else {
+        inboxBadge.classList.remove('bump');
+    }
+}
+
+function flashInboxIcon() {
+    if (!navInboxBtn) return;
+    navInboxBtn.classList.remove('ping');
+    void navInboxBtn.offsetWidth;
+    navInboxBtn.classList.add('ping');
+    setTimeout(() => navInboxBtn.classList.remove('ping'), 420);
+}
+
+function playHapticAndSound(isError = false) {
+    if (navigator.vibrate) {
+        navigator.vibrate(isError ? 8 : 18);
+    }
+
+    if (captureAudio === null) {
+        try {
+            captureAudio = new Audio('/assets/capture.mp3');
+            captureAudio.preload = 'auto';
+        } catch (err) {
+            captureAudio = undefined;
+        }
+    }
+
+    if (!captureAudio || captureAudio === undefined) return;
+
+    try {
+        captureAudio.currentTime = 0;
+        captureAudio.volume = isError ? 0.18 : 0.35;
+        captureAudio.play().catch(() => {});
+    } catch (err) {
+        // silently ignore unsupported playback
+    }
+}
+
+function handleHashRoute(initial = false) {
+    const hash = window.location.hash;
+    if (hash === '#capture') {
+        showPage('capture');
+        if (captureInput) {
+            requestAnimationFrame(() => captureInput.focus());
+        }
+        return true;
+    }
+    if (hash === '#inbox') {
+        showPage('inbox');
+        return true;
+    }
+    if (!initial && hash === '') {
+        return false;
+    }
+    return false;
 }
 
 // Show page
 function showPage(page) {
     state.currentPage = page;
+
+    if (page !== 'capture' && captureInput) {
+        captureInput.blur();
+    }
 
     // Hide all pages
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -163,7 +326,9 @@ function showPage(page) {
     // Show selected page
     if (page === 'capture') {
         capturePage.classList.add('active');
-        captureInput.focus();
+        if (captureInput) {
+            requestAnimationFrame(() => captureInput.focus());
+        }
     } else if (page === 'inbox') {
         inboxPage.classList.add('active');
         renderInbox();

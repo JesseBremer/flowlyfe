@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v31';
+const CACHE_VERSION = 'v32';
 const CACHE_NAME = `flowlyfe-${CACHE_VERSION}`;
 const APP_BASE = self.location.pathname.replace(/service-worker\.js$/, '');
 const RESOURCES = [
@@ -15,10 +15,13 @@ const RESOURCES = [
   'icons/icon-152x152.png',
   'icons/icon-192x192.png',
   'icons/icon-384x384.png',
-  'icons/icon-512x512.png'
+  'icons/icon-512x512.png',
+  'icons/shortcut-capture.png',
+  'icons/shortcut-inbox.png'
 ];
 
 const urlsToCache = RESOURCES.map(resource => `${APP_BASE}${resource}`);
+const optionalAssets = ['assets/capture.mp3'].map(resource => `${APP_BASE}${resource}`);
 
 // Install service worker and cache resources
 self.addEventListener('install', event => {
@@ -26,7 +29,11 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+        return cache.addAll(urlsToCache).then(() => {
+          return Promise.all(optionalAssets.map(asset =>
+            cache.add(asset).catch(() => null)
+          ));
+        });
       })
   );
   self.skipWaiting();

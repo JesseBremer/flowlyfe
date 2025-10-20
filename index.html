@@ -16,24 +16,33 @@
 </head>
 <body>
     <div id="app">
-        <header>
-            <h1>Flowlyfe</h1>
-            <button id="viewInboxBtn" class="header-btn">
-                Inbox <span id="inboxCount" class="count-badge">0</span>
+        <header class="app-header">
+            <h1 class="brand">Flowlyfe</h1>
+            <button class="inbox-chip" id="inboxBtn" aria-label="Open Inbox">
+                Inbox <span id="inboxBadge" class="badge">0</span>
             </button>
         </header>
 
+        <div id="focusScrim" aria-hidden="true"></div>
+
         <main id="capturePage" class="page active">
-            <div class="capture-container">
-                <div class="capture-input-wrapper">
+            <section class="capture-wrap">
+                <div class="capture-backdrop" aria-hidden="true"></div>
+                <div class="capture-card" id="captureCard">
                     <textarea
                         id="captureInput"
-                        placeholder="Flow your life..."
-                        autofocus
+                        class="capture-input"
+                        placeholder="Flow your life…"
+                        aria-label="Capture a thought"
                         rows="1"></textarea>
-                    <button id="captureBtn" class="capture-btn">↵</button>
+
+                    <button id="captureFab" class="fab" aria-label="Capture to Inbox">
+                        <span class="fab-icon">✎</span>
+                        <span class="fab-ripple" aria-hidden="true"></span>
+                    </button>
                 </div>
-            </div>
+            </section>
+
             <div id="captureStatus" class="status-message"></div>
         </main>
 
@@ -277,18 +286,6 @@
                 <div id="processContent" class="process-content"></div>
 
                 <div class="process-buttons">
-                    <button onclick="processTo('thoughts')" class="process-option thoughts-btn">
-                        💭 Thought/Idea
-                    </button>
-
-                    <button onclick="processTo('contacts')" class="process-option contacts-btn">
-                        👤 Contact
-                    </button>
-
-                    <button onclick="processTo('calendar')" class="process-option calendar-btn">
-                        📅 Calendar Event
-                    </button>
-
                     <div class="todo-options">
                         <p class="option-label">To-Do:</p>
                         <button onclick="processTo('todos', 'active')" class="process-option todo-btn">
@@ -301,6 +298,19 @@
                             ⏱️ Awaiting
                         </button>
                     </div>
+
+                    <p class="option-label store-label">Store Item As:</p>
+                    <button onclick="processTo('thoughts')" class="process-option thoughts-btn">
+                        💭 Thought/Idea
+                    </button>
+
+                    <button onclick="processTo('contacts')" class="process-option contacts-btn">
+                        👤 Contact
+                    </button>
+
+                    <button onclick="processTo('calendar')" class="process-option calendar-btn">
+                        📅 Calendar Event
+                    </button>
                 </div>
 
                 <button onclick="closeProcessModal()" class="modal-close">Cancel</button>
@@ -383,10 +393,10 @@
                 <span class="nav-icon">✓</span>
                 <span class="nav-label">To-Dos</span>
             </button>
-            <button class="nav-btn nav-btn-capture" data-page="capture" aria-label="Capture new item">
+            <button id="navCapture" class="nav-btn nav-btn-capture" data-page="capture" aria-label="Capture new item">
                 <span class="nav-icon">✏️</span>
             </button>
-            <button class="nav-btn" data-page="inbox">
+            <button id="navInbox" class="nav-btn" data-page="inbox">
                 <span class="nav-icon">📥</span>
                 <span class="nav-label">Inbox</span>
             </button>
