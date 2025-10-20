@@ -4,8 +4,8 @@
   "description": "Your personal productivity companion",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#5B8A72",
+  "background_color": "#f4ead5",
+  "theme_color": "#8d6e63",
   "orientation": "portrait-primary",
   "icons": [
     {
