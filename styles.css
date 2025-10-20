@@ -504,7 +504,8 @@ main {
 }
 
 .save-btn,
-.cancel-btn {
+.cancel-btn,
+.move-btn {
     background-color: rgba(122, 75, 52, 0.12);
     color: var(--primary-color);
     border: 1px solid rgba(122, 75, 52, 0.22);
@@ -516,10 +517,18 @@ main {
     box-shadow: 0 4px 12px var(--shadow-subtle);
 }
 
+.save-btn[hidden],
+.cancel-btn[hidden],
+.thought-move-options[hidden] {
+    display: none !important;
+}
+
 .save-btn:hover,
 .save-btn:focus-visible,
 .cancel-btn:hover,
-.cancel-btn:focus-visible {
+.cancel-btn:focus-visible,
+.move-btn:hover,
+.move-btn:focus-visible {
     background-color: rgba(122, 75, 52, 0.2);
     border-color: rgba(122, 75, 52, 0.35);
     transform: translateY(-1px);
@@ -543,6 +552,49 @@ main {
 .category-item-editor:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px rgba(210, 138, 46, 0.18);
+    outline: none;
+}
+
+.thought-move {
+    position: relative;
+}
+
+.move-btn.active {
+    background-color: rgba(122, 75, 52, 0.2);
+    border-color: rgba(122, 75, 52, 0.35);
+}
+
+.thought-move-options {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(122, 75, 52, 0.22);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    z-index: 10;
+}
+
+.thought-move-options button {
+    background: transparent;
+    border: none;
+    text-align: left;
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.thought-move-options button:hover,
+.thought-move-options button:focus-visible {
+    background: rgba(210, 138, 46, 0.15);
+    color: var(--primary-color);
     outline: none;
 }
 

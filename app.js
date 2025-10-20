@@ -121,6 +121,12 @@ function init() {
     if (!handledHash) {
         showPage(state.currentPage);
     }
+
+    document.addEventListener('click', event => {
+        if (!event.target.closest('.category-item-actions')) {
+            closeThoughtMoveMenus();
+        }
+    });
 }
 
 // Auto-expand textarea as user types
@@ -718,6 +724,14 @@ function renderThoughts() {
                     <button class="edit-btn" data-action="edit" onclick="startThoughtEdit(${item.id})">Edit</button>
                     <button class="save-btn" data-action="save" onclick="saveThoughtEdit(${item.id})" hidden>Save</button>
                     <button class="cancel-btn" data-action="cancel" onclick="cancelThoughtEdit(${item.id})" hidden>Cancel</button>
+                    <div class="thought-move">
+                        <button class="move-btn" data-action="move" onclick="toggleThoughtMove(${item.id})">Move</button>
+                        <div class="thought-move-options" data-move-options hidden>
+                            <button onclick="moveThoughtToTodo(${item.id}, 'active')">✓ Active</button>
+                            <button onclick="moveThoughtToTodo(${item.id}, 'someday')">⏳ Someday</button>
+                            <button onclick="moveThoughtToTodo(${item.id}, 'awaiting')">⏱️ Awaiting</button>
+                        </div>
+                    </div>
                     <button class="delete-btn" onclick="deleteThought(${item.id})">Delete</button>
                 </div>
             </div>
@@ -745,6 +759,8 @@ function startThoughtEdit(id) {
     const editButton = container.querySelector('[data-action="edit"]');
     const saveButton = container.querySelector('[data-action="save"]');
     const cancelButton = container.querySelector('[data-action="cancel"]');
+    const moveButton = container.querySelector('[data-action="move"]');
+    const moveMenu = container.querySelector('[data-move-options]');
 
     if (!textEl || !viewWrap || !editButton || !saveButton || !cancelButton) return;
 
@@ -760,6 +776,8 @@ function startThoughtEdit(id) {
         editButton.hidden = true;
         saveButton.hidden = false;
         cancelButton.hidden = false;
+        if (moveButton) moveButton.hidden = true;
+        if (moveMenu) moveMenu.hidden = true;
 
         container.dataset.editing = 'true';
     }
@@ -809,14 +827,72 @@ function cancelThoughtEdit(id) {
     const editButton = container.querySelector('[data-action="edit"]');
     const saveButton = container.querySelector('[data-action="save"]');
     const cancelButton = container.querySelector('[data-action="cancel"]');
+    const moveButton = container.querySelector('[data-action="move"]');
 
     if (editButton && saveButton && cancelButton) {
         editButton.hidden = false;
         saveButton.hidden = true;
         cancelButton.hidden = true;
     }
+    if (moveButton) moveButton.hidden = false;
 
     container.dataset.editing = '';
+}
+
+function toggleThoughtMove(id) {
+    const container = document.querySelector(`.category-item[data-id="${id}"]`);
+    if (!container || container.dataset.editing === 'true') return;
+
+    const menu = container.querySelector('[data-move-options]');
+    const moveButton = container.querySelector('[data-action="move"]');
+    if (!menu || !moveButton) return;
+
+    const isHidden = menu.hasAttribute('hidden');
+    closeThoughtMoveMenus();
+    if (isHidden) {
+        menu.hidden = false;
+        moveButton.classList.add('active');
+    } else {
+        menu.hidden = true;
+        moveButton.classList.remove('active');
+    }
+}
+
+function closeThoughtMoveMenus(exceptId = null) {
+    document.querySelectorAll('.thought-move-options').forEach(menu => {
+        const container = menu.closest('.category-item');
+        if (!container) return;
+        if (exceptId && Number(container.dataset.id) === exceptId) {
+            return;
+        }
+        menu.hidden = true;
+        const moveButton = container.querySelector('[data-action="move"]');
+        if (moveButton) moveButton.classList.remove('active');
+    });
+}
+
+function moveThoughtToTodo(id, listName) {
+    const idx = state.categories.thoughts.findIndex(item => item.id === id);
+    if (idx === -1) return;
+
+    const thought = state.categories.thoughts.splice(idx, 1)[0];
+    const todo = {
+        id: Date.now(),
+        content: thought.content,
+        timestamp: thought.timestamp || new Date().toISOString(),
+        completed: false
+    };
+
+    if (!state.categories.todos[listName]) {
+        state.categories.todos[listName] = [];
+    }
+
+    state.categories.todos[listName].unshift(todo);
+    saveData();
+    closeThoughtMoveMenus();
+    renderThoughts();
+    renderTodoList(listName, `${listName}TodosList`);
+    showStatus('Moved to To-Do list', 'success');
 }
 
 // Render Todos page
