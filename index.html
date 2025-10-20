@@ -39,7 +39,6 @@
 
         <main id="inboxPage" class="page">
             <div class="page-header">
-                <button class="nav-btn back-btn" data-page="capture">← Back</button>
                 <h2>Inbox</h2>
             </div>
             <div id="inboxList" class="inbox-list">
@@ -49,7 +48,6 @@
 
         <main id="thoughtsPage" class="page">
             <div class="page-header">
-                <button class="nav-btn back-btn" data-page="capture">← Back</button>
                 <h2>Thoughts & Ideas</h2>
             </div>
             <div id="thoughtsList" class="category-list">
@@ -59,7 +57,6 @@
 
         <main id="todosPage" class="page">
             <div class="page-header">
-                <button class="nav-btn back-btn" data-page="capture">← Back</button>
                 <h2>To-Do Lists</h2>
             </div>
 
@@ -85,6 +82,192 @@
                     </div>
                 </section>
             </div>
+        </main>
+
+        <main id="journalPage" class="page">
+            <section class="journal-hero">
+                <h2>Journal Studio</h2>
+                <p class="journal-tagline">Three ways to reflect, all tucked into your Flowlyfe rhythm.</p>
+            </section>
+
+            <section id="journalHomeView" class="journal-view active">
+                <div class="journal-grid">
+                    <button class="journal-card" data-journal-target="flowform">
+                        <div class="journal-card-icon">🎯</div>
+                        <h3>Flowform</h3>
+                        <p>Guided daily capture across feelings, gratitude, sparks, and highlights.</p>
+                        <span class="journal-card-cta">Open Flowform</span>
+                    </button>
+
+                    <button class="journal-card" data-journal-target="freeform">
+                        <div class="journal-card-icon">📝</div>
+                        <h3>Freeform</h3>
+                        <p>Unstructured writing with soothing prompts and auto-save as you think.</p>
+                        <span class="journal-card-cta">Start Writing</span>
+                    </button>
+
+                    <button class="journal-card" data-journal-target="roteform">
+                        <div class="journal-card-icon">🌱</div>
+                        <h3>Roteform</h3>
+                        <p>Seven science-backed reflections to close the day with clarity.</p>
+                        <span class="journal-card-cta">Begin Reflection</span>
+                    </button>
+                </div>
+
+                <div class="journal-actions">
+                    <button class="journal-secondary-btn" data-journal-target="entries">
+                        📚 Browse My Entries
+                    </button>
+                </div>
+            </section>
+
+            <section id="journalFlowformView" class="journal-view">
+                <div class="journal-scroll">
+                    <button class="journal-back-btn" data-journal-target="home">← Journal Home</button>
+                    <div id="flowformContainer" class="flowform-container"></div>
+                </div>
+            </section>
+
+            <section id="journalFreeformView" class="journal-view">
+                <div class="journal-scroll">
+                    <button class="journal-back-btn" data-journal-target="home">← Journal Home</button>
+                    <header class="journal-section-header">
+                        <h3>Freeform Notebook</h3>
+                        <p>Settle in, breathe, and pour your thoughts on a digital page.</p>
+                    </header>
+
+                    <label for="freeformTitle" class="journal-label">Title</label>
+                    <input id="freeformTitle" class="journal-input" type="text" placeholder="Add a title or leave blank for today">
+
+                    <label for="freeformContent" class="journal-label">Entry</label>
+                    <textarea id="freeformContent" class="journal-textarea" rows="10" placeholder="Drawing a blank? Try a prompt below."></textarea>
+
+                    <div class="journal-meta-row">
+                        <div class="journal-word-count">Words: <span id="freeformWordCount">0</span></div>
+                        <button id="freeformPromptBtn" class="journal-secondary-btn">✨ New Prompt</button>
+                    </div>
+
+                    <div class="journal-action-row">
+                        <button class="journal-secondary-btn" data-journal-target="entries">📚 View Entries</button>
+                        <button id="freeformSaveBtn" class="journal-primary-btn">Save Entry</button>
+                    </div>
+
+                    <div id="freeformStatus" class="journal-status"></div>
+                </div>
+            </section>
+
+            <section id="journalRoteformView" class="journal-view">
+                <div class="journal-scroll">
+                    <button class="journal-back-btn" data-journal-target="home">← Journal Home</button>
+                    <header class="journal-section-header">
+                        <h3>Roteform Reflection</h3>
+                        <p class="journal-date" id="roteformDateLabel">Today</p>
+                        <p>Answer the prompts that resonate—each response nudges you toward a grounded tomorrow.</p>
+                    </header>
+
+                    <form id="roteformForm" class="journal-form">
+                        <div class="journal-question">
+                            <label for="roteGratitude" class="journal-label">
+                                1. What are three things you're grateful for today, and why?
+                            </label>
+                            <textarea id="roteGratitude" class="journal-textarea" rows="3" placeholder="List three specific things you appreciated today and explain what made them meaningful to you..."></textarea>
+                        </div>
+
+                        <div class="journal-question">
+                            <label for="roteEmotions" class="journal-label">
+                                2. What emotions did you experience today, and what sparked them?
+                            </label>
+                            <textarea id="roteEmotions" class="journal-textarea" rows="3" placeholder="Notice and name your emotions, then reflect on what situations or thoughts brought them up..."></textarea>
+                        </div>
+
+                        <div class="journal-question">
+                            <label for="roteValues" class="journal-label">
+                                3. Where did you feel most aligned with your values?
+                            </label>
+                            <textarea id="roteValues" class="journal-textarea" rows="3" placeholder="Reflect on moments when you felt aligned with your core values or what gives your life meaning..."></textarea>
+                        </div>
+
+                        <div class="journal-question">
+                            <label for="roteGrowth" class="journal-label">
+                                4. What challenge helped you grow today, and what did it teach you?
+                            </label>
+                            <textarea id="roteGrowth" class="journal-textarea" rows="3" placeholder="Describe a difficulty you faced and focus on what it taught you or how it helped you develop..."></textarea>
+                        </div>
+
+                        <div class="journal-question">
+                            <label for="roteConnection" class="journal-label">
+                                5. How did you connect meaningfully with others?
+                            </label>
+                            <textarea id="roteConnection" class="journal-textarea" rows="3" placeholder="Reflect on moments of genuine connection, kindness given or received, or quality time shared..."></textarea>
+                        </div>
+
+                        <div class="journal-question">
+                            <label for="roteCompassion" class="journal-label">
+                                6. If a friend lived your day, what would you tell them?
+                            </label>
+                            <textarea id="roteCompassion" class="journal-textarea" rows="3" placeholder="Practice self-compassion by considering what supportive, understanding words you'd offer a friend..."></textarea>
+                        </div>
+
+                        <div class="journal-question">
+                            <label for="roteStory" class="journal-label">
+                                7. What story does today tell about who you're becoming?
+                            </label>
+                            <textarea id="roteStory" class="journal-textarea" rows="3" placeholder="Consider how today's experiences fit into your larger life narrative and personal growth journey..."></textarea>
+                        </div>
+                    </form>
+
+                    <div class="journal-progress">
+                        <span id="roteformProgressText">0/7 reflections noted</span>
+                        <div class="journal-progress-bar">
+                            <div id="roteformProgressFill" class="journal-progress-fill"></div>
+                        </div>
+                    </div>
+
+                    <div class="journal-action-row">
+                        <button id="roteformDraftBtn" class="journal-secondary-btn">💾 Save Draft</button>
+                        <button id="roteformSaveBtn" class="journal-primary-btn">Save Entry</button>
+                    </div>
+
+                    <div id="roteformStatus" class="journal-status"></div>
+                </div>
+            </section>
+
+            <section id="journalEntriesView" class="journal-view">
+                <div class="journal-scroll">
+                    <button class="journal-back-btn" data-journal-target="home">← Journal Home</button>
+                    <header class="journal-section-header">
+                        <h3>My Entries</h3>
+                        <p>All of your reflections stay on this device for quick review anytime—online or off.</p>
+                    </header>
+
+                    <div class="journal-filters">
+                        <input id="journalSearchInput" class="journal-input" type="search" placeholder="Search by title or note">
+                        <select id="journalFilterSelect" class="journal-input">
+                            <option value="all">All types</option>
+                            <option value="flowform">Flowform</option>
+                            <option value="freeform">Freeform</option>
+                            <option value="roteform">Roteform</option>
+                        </select>
+                    </div>
+
+                    <div id="journalEntriesList" class="journal-entries-list"></div>
+                    <div id="journalEmptyState" class="journal-empty-state hidden">
+                        <p>Your journal is waiting for its first story.</p>
+                        <button class="journal-primary-btn" data-journal-target="freeform">Start Writing</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="journalDetailView" class="journal-view">
+                <div class="journal-scroll">
+                    <button class="journal-back-btn" data-journal-target="entries">← Back to Entries</button>
+                    <article id="journalDetailContent" class="journal-detail"></article>
+                    <div class="journal-action-row">
+                        <button id="journalDeleteBtn" class="journal-danger-btn">🗑 Delete Entry</button>
+                        <button class="journal-secondary-btn" data-journal-target="entries">Done</button>
+                    </div>
+                </div>
+            </section>
         </main>
 
         <!-- Process Modal -->
@@ -208,10 +391,15 @@
                 <span class="nav-icon">💭</span>
                 <span class="nav-label">Thoughts</span>
             </button>
+            <button class="nav-btn" data-page="journal">
+                <span class="nav-icon">📔</span>
+                <span class="nav-label">Journal</span>
+            </button>
         </nav>
     </div>
 
     <script src="app.js"></script>
+    <script src="journal.js"></script>
     <script>
         // Register service worker for PWA functionality
         if ('serviceWorker' in navigator) {

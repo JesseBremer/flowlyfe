@@ -2,7 +2,7 @@
   "name": "Flowlyfe",
   "short_name": "Flowlyfe",
   "description": "Your personal productivity companion",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#5B8A72",

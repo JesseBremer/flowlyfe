@@ -32,6 +32,7 @@ let capturePage;
 let inboxPage;
 let thoughtsPage;
 let todosPage;
+let journalPage;
 let processModal;
 
 // Initialize app
@@ -50,6 +51,7 @@ function init() {
     inboxPage = document.getElementById('inboxPage');
     thoughtsPage = document.getElementById('thoughtsPage');
     todosPage = document.getElementById('todosPage');
+    journalPage = document.getElementById('journalPage');
     processModal = document.getElementById('processModal');
 
     // Load data from localStorage
@@ -73,6 +75,12 @@ function init() {
 
     // Update UI
     updateCounts();
+
+    if (typeof initJournal === 'function') {
+        initJournal();
+    }
+
+    showPage(state.currentPage);
 }
 
 // Auto-expand textarea as user types
@@ -146,6 +154,12 @@ function showPage(page) {
 
     // Hide all pages
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    if (navBtns) {
+        navBtns.forEach(btn => {
+            const target = btn.dataset.page;
+            btn.classList.toggle('active', target === page);
+        });
+    }
 
     // Show selected page
     if (page === 'capture') {
@@ -160,6 +174,14 @@ function showPage(page) {
     } else if (page === 'todos') {
         todosPage.classList.add('active');
         renderTodos();
+    } else if (page === 'journal' && journalPage) {
+        journalPage.classList.add('active');
+        if (typeof initJournal === 'function') {
+            initJournal();
+        }
+        if (typeof handleJournalNavigation === 'function') {
+            handleJournalNavigation();
+        }
     }
 }
 

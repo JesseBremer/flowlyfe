@@ -1,11 +1,23 @@
-const CACHE_NAME = 'flowlyfe-v27';
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/styles.css',
-  '/app.js',
-  '/manifest.json'
+const CACHE_NAME = 'flowlyfe-v30';
+const APP_BASE = self.location.pathname.replace(/service-worker\.js$/, '');
+const RESOURCES = [
+  '',
+  'index.html',
+  'styles.css',
+  'app.js',
+  'journal.js',
+  'manifest.json',
+  'icons/icon-72x72.png',
+  'icons/icon-96x96.png',
+  'icons/icon-128x128.png',
+  'icons/icon-144x144.png',
+  'icons/icon-152x152.png',
+  'icons/icon-192x192.png',
+  'icons/icon-384x384.png',
+  'icons/icon-512x512.png'
 ];
+
+const urlsToCache = RESOURCES.map(resource => `${APP_BASE}${resource}`);
 
 // Install service worker and cache resources
 self.addEventListener('install', event => {
@@ -16,20 +28,24 @@ self.addEventListener('install', event => {
         return cache.addAll(urlsToCache);
       })
   );
+  self.skipWaiting();
 });
 
 // Fetch from cache, fallback to network
 self.addEventListener('fetch', event => {
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      caches.match(APP_BASE + 'index.html')
+        .then(response => response || fetch(event.request))
+        .catch(() => caches.match(APP_BASE + 'index.html'))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      }
-    )
+      .then(response => response || fetch(event.request))
+      .catch(() => caches.match(APP_BASE + 'index.html'))
   );
 });
 
