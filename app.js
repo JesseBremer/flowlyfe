@@ -34,25 +34,6 @@ let thoughtsPage;
 let todosPage;
 let journalPage;
 let processModal;
-let anchorChips;
-let capturePromptText;
-let refreshPromptBtn;
-
-const capturePrompts = [
-    'What is tugging at your attention right now?',
-    'Name the spark you just felt—what do you want to remember?',
-    'If Future You opened this note tonight, what would you want them to act on?',
-    'Who crossed your mind that deserves a follow-up or a thank-you?',
-    'Capture the sentence that sums up this moment.',
-    'What tiny win or nagging worry do you want out of your head?',
-    'How would you finish the phrase “Don’t forget to…”?',
-    'Write the question you hope to explore later.',
-    'Record the feeling or detail that made this moment stand out.',
-    'What promise did you just make to yourself or someone else?'
-];
-
-let defaultCapturePlaceholder = '';
-let currentPromptIndex = -1;
 
 // Initialize app
 function init() {
@@ -72,10 +53,6 @@ function init() {
     todosPage = document.getElementById('todosPage');
     journalPage = document.getElementById('journalPage');
     processModal = document.getElementById('processModal');
-    anchorChips = document.querySelectorAll('.anchor-chip');
-    capturePromptText = document.getElementById('capturePromptText');
-    refreshPromptBtn = document.getElementById('refreshPromptBtn');
-    defaultCapturePlaceholder = captureInput ? captureInput.placeholder : '';
 
     // Load data from localStorage
     loadData();
@@ -95,17 +72,6 @@ function init() {
 
     // Auto-expand textarea
     captureInput.addEventListener('input', autoExpandTextarea);
-
-    if (anchorChips && anchorChips.length > 0) {
-        anchorChips.forEach(chip => {
-            chip.addEventListener('click', () => applyAnchorChip(chip));
-        });
-    }
-
-    if (refreshPromptBtn && capturePromptText) {
-        refreshPromptBtn.addEventListener('click', () => cyclePrompt());
-        cyclePrompt();
-    }
 
     // Update UI
     updateCounts();
@@ -154,8 +120,6 @@ function handleCapture() {
     // Clear input and reset height
     captureInput.value = '';
     captureInput.style.height = 'auto';
-    resetAnchorState();
-
     // Show success message
     showStatus('Captured!', 'success');
 
@@ -164,10 +128,6 @@ function handleCapture() {
 
     // Focus back on input
     captureInput.focus();
-
-    if (capturePromptText) {
-        cyclePrompt();
-    }
 }
 
 // Show status message
@@ -180,60 +140,6 @@ function showStatus(message, type) {
         captureStatus.textContent = '';
         captureStatus.className = 'status-message';
     }, 2000);
-}
-
-function applyAnchorChip(chip) {
-    if (!chip || !captureInput) {
-        return;
-    }
-
-    anchorChips.forEach(item => item.classList.remove('active'));
-    chip.classList.add('active');
-
-    const placeholder = chip.dataset.placeholder || defaultCapturePlaceholder;
-    const prefix = chip.dataset.prefix || '';
-
-    captureInput.placeholder = placeholder;
-
-    if (!captureInput.value.trim()) {
-        captureInput.value = prefix;
-        autoExpandTextarea();
-    }
-
-    captureInput.focus();
-
-    if (typeof captureInput.setSelectionRange === 'function') {
-        const caretPosition = captureInput.value.length;
-        captureInput.setSelectionRange(caretPosition, caretPosition);
-    }
-}
-
-function resetAnchorState() {
-    if (!captureInput) {
-        return;
-    }
-
-    captureInput.placeholder = defaultCapturePlaceholder;
-    if (anchorChips && anchorChips.length > 0) {
-        anchorChips.forEach(item => item.classList.remove('active'));
-    }
-}
-
-function cyclePrompt() {
-    if (!capturePromptText || capturePrompts.length === 0) {
-        return;
-    }
-
-    let nextIndex = Math.floor(Math.random() * capturePrompts.length);
-
-    if (capturePrompts.length > 1) {
-        while (nextIndex === currentPromptIndex) {
-            nextIndex = Math.floor(Math.random() * capturePrompts.length);
-        }
-    }
-
-    currentPromptIndex = nextIndex;
-    capturePromptText.textContent = capturePrompts[currentPromptIndex];
 }
 
 // Update all count badges
