@@ -1,4 +1,5 @@
-const CACHE_NAME = 'flowlyfe-v30';
+const CACHE_VERSION = 'v31';
+const CACHE_NAME = `flowlyfe-${CACHE_VERSION}`;
 const APP_BASE = self.location.pathname.replace(/service-worker\.js$/, '');
 const RESOURCES = [
   '',
@@ -56,11 +57,11 @@ self.addEventListener('activate', event => {
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
+          if (!cacheWhitelist.includes(cacheName)) {
             return caches.delete(cacheName);
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
